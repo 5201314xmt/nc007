@@ -49,5 +49,57 @@ else
     echo -e "${GREEN}>>> Node.js 已安装: $(node -v)${NC}"
 fi
 
-# 4. 安装 PM2 和 serve 全局工具
-echo -e "${YELLOW}>>> [3/6] 安装进程管理工具 (PM2,
+# 4. 安装 PM2（不再使用 serve 包）
+echo -e "${YELLOW}>>> [3/6] 安装进程管理工具 (PM2)...${NC}"
+npm install -g pm2
+
+# 5. 拉取或更新代码
+if [ -d "$APP_DIR" ]; then
+    echo -e "${YELLOW}>>> [4/6] 目录已存在，正在更新代码...${NC}"
+    cd "$APP_DIR"
+    git reset --hard
+    git pull
+else
+    echo -e "${YELLOW}>>> [4/6] 克隆代码仓库...${NC}"
+    git clone "$REPO_URL" "$APP_DIR"
+    cd "$APP_DIR"
+fi
+
+# 6. 安装依赖并构建
+echo -e "${YELLOW}>>> [5/6] 安装项目依赖并构建...${NC}"
+npm install
+npm run build
+
+# 7. 启动服务
+echo -e "${YELLOW}>>> [6/6] 配置并启动服务...${NC}"
+
+# 确定构建目录 (适配 Vite 或 Create-React-App)
+if [ -d "dist" ]; then
+    BUILD_DIR="dist"
+elif [ -d "build" ]; then
+    BUILD_DIR="build"
+else
+    echo -e "${RED}错误: 构建失败，未找到 dist 或 build 目录。${NC}"
+    exit 1
+fi
+
+# 如果已存在同名进程，先删除
+if pm2 list | grep -q "$APP_NAME"; then
+    pm2 delete "$APP_NAME"
+fi
+
+# 使用 PM2 自带静态服务功能
+pm2 serve "$BUILD_DIR" "$PORT" --name "$APP_NAME" --spa
+
+# 保存 PM2 状态并设置开机自启
+pm2 save
+pm2 startup | tail -n 1 | bash >/dev/null 2>&1 || true
+
+# 获取公网 IP (仅供参考)
+PUBLIC_IP=$(curl -s ifconfig.me || echo "你的服务器IP")
+
+echo -e "${GREEN}==============================================${NC}"
+echo -e "${GREEN} 部署成功！ ${NC}"
+echo -e "${GREEN} 访问地址: http://${PUBLIC_IP}:${PORT} ${NC}"
+echo -e "${GREEN} 管理命令: pm2 status/logs/restart ${APP_NAME} ${NC}"
+echo -e "${GREEN}==============================================${NC}"
