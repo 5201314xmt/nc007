@@ -2,7 +2,7 @@
 set -e
 
 # --- 配置 ---
-REPO_URL="https://github.com/5201314xmt/ncqb.git"
+REPO_URL="https://github.com/5201314xmt/nc007.git"
 APP_DIR="/opt/ncqb"
 APP_NAME="ncqb"
 PORT="${PORT:-3000}" # 默认端口 3000，可通过 export PORT=8080 修改
@@ -103,3 +103,4 @@ echo -e "${GREEN} 部署成功！ ${NC}"
 echo -e "${GREEN} 访问地址: http://${PUBLIC_IP}:${PORT} ${NC}"
 echo -e "${GREEN} 管理命令: pm2 status/log/restart ncqb ${NC}"
 echo -e "${GREEN}==============================================${NC}"
+
